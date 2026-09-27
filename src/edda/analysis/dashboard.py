@@ -1857,6 +1857,13 @@ _SYS_MODAL_CSS = _CSS[_CSS.index("/* ---- System diagram modal"):
 _SYS_MODAL_JS = _JS[_JS.index("// ---- System Diagram ----"):
                      _JS.index("// END_SYS_DIAGRAM")]
 
+# Both the Boxels CSS and JS happen to run to the end of their respective
+# strings, so no end marker is needed — and unlike _SYS_MODAL_JS, the JS
+# slice below is a complete, self-contained IIFE (own opening and closing
+# braces included), so callers don't need to re-wrap it.
+_BOXELS_CSS = _CSS[_CSS.index("/* ---- Boxels ---- */"):]
+_BOXELS_JS = _JS[_JS.index("// ---- Boxels ----"):]
+
 _SYS_MODAL_HTML = """\
 <div id="sys-modal" class="sys-modal">
   <div class="sys-modal-bg" id="sys-modal-bg"></div>
@@ -3588,11 +3595,14 @@ def _build_star_section(star_df: pd.DataFrame, cur_pos: dict | None = None,
     return f'<div class="detail-layout">{list_block}{content_block}</div>'
 
 
-def _build_boxels_section() -> str:
-    """Static shell for the Boxels section — content rendered by JS from BOXEL_DATA."""
+def _build_boxels_section(default_min: int = 5) -> str:
+    """Static shell for the Boxels section — content rendered by JS from BOXEL_DATA.
+    `default_min` seeds the "Min systems" field: the dashboard's own
+    career-spanning data defaults to 5 to skip clutter, but the trip report
+    (much smaller, already scoped to one trip) wants every boxel visible."""
     return (
         '<div class="bx-controls">'
-        '<label>Min systems&nbsp;<input type="number" id="bx-min" value="5" min="1" max="9999"></label>'
+        f'<label>Min systems&nbsp;<input type="number" id="bx-min" value="{default_min}" min="1" max="9999"></label>'
         '<input type="text" id="bx-search" placeholder="Filter by name…">'
         '<span class="bx-sort-btns">'
         '<button class="bx-sort-btn active" data-sort="cnt">Count▾</button>'

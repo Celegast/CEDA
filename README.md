@@ -85,8 +85,9 @@ tooltips, and a galaxy minimap.
 
 **Trip report** (`pdm run trip -- --from … --to … --html trip.html`) — a
 self-contained report for a date range: estimated & sold value, daily-earnings and
-Cr/active-hour charts, sortable systems/species/planet tables, an interactive 3D
-route map, and Powerplay merit/CP estimates (Antal & Li Yong-Rui bonuses applied
+Cr/active-hour charts, a boxels-visited breakdown, sortable systems/species/planet
+tables (with colour-coded sampled-species tags per system), an interactive 3D route
+map, and Powerplay merit/CP estimates (Antal & Li Yong-Rui bonuses applied
 automatically from your merit history).
 
 **Stratum Tectonicas research report** (`pdm run stratum`) — a collaborative

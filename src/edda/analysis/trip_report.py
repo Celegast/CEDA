@@ -25,7 +25,10 @@ from plotly.subplots import make_subplots
 
 from . import stats as st
 from . import maps as mp
-from .dashboard import _SYS_MODAL_CSS, _SYS_MODAL_JS, _SYS_MODAL_HTML
+from .dashboard import (
+    _SYS_MODAL_CSS, _SYS_MODAL_JS, _SYS_MODAL_HTML,
+    _BOXELS_CSS, _BOXELS_JS, _build_boxels_section,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -641,6 +644,11 @@ def build_trip_report(
     print("  Systems visited...")
     sys_df   = st.trip_systems_visited(conn, date_from, date_to)
 
+    print("  Boxels...")
+    trip_sa    = set(int(x) for x in sys_df["system_address"].dropna())
+    boxel_data = st.boxels_data(conn, min_systems=1, system_addresses=trip_sa)
+    boxel_data_js = "var BOXEL_DATA = " + json.dumps(boxel_data, separators=(",", ":")) + ";"
+
     print("  Route map...")
     df_route      = st.trip_route_points(conn, date_from, date_to)
     df_systems    = st.trip_system_data(conn, date_from, date_to,
@@ -747,6 +755,7 @@ def build_trip_report(
         _section("Exobiology Samples", _exobio_table(est, exobio_bonus=exobio_bonus)),
         _section("Planet Types", _planet_table(bodies)),
         _section("Personal Bests", _records_table(records)),
+        _section("Boxels", _build_boxels_section()),
         _section("Systems Visited", _systems_table(sys_df)),
     ]
 
@@ -755,6 +764,7 @@ def build_trip_report(
         f'<script>{sys_data_js}</script>'
         f'<script>{_SYS_MODAL_JS}\n}}());</script>'
     )
+    boxels_js = f'<script>{boxel_data_js}</script><script>{_BOXELS_JS}</script>'
 
     body = (
         modal_html + "\n"
@@ -765,8 +775,8 @@ def build_trip_report(
     html = _html_doc(
         f"Trip Report — {lo_disp}",
         body,
-        extra_css="\n" + _SYS_MODAL_CSS,
-        extra_js=modal_js + "\n" + _SORT_JS,
+        extra_css="\n" + _SYS_MODAL_CSS + "\n" + _BOXELS_CSS,
+        extra_js=modal_js + "\n" + boxels_js + "\n" + _SORT_JS,
     )
     out_path.write_text(html, encoding="utf-8")
     print(f"Saved: {out_path}")

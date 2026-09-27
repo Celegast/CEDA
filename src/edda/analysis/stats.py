@@ -1411,13 +1411,18 @@ def boxel_he_vs_species(conn: sqlite3.Connection, pattern: str) -> pd.DataFrame:
     return grp
 
 
-def boxels_data(conn: sqlite3.Connection, min_systems: int = 2) -> list[dict]:
+def boxels_data(conn: sqlite3.Connection, min_systems: int = 2,
+                 system_addresses: set[int] | None = None) -> list[dict]:
     """
     Return aggregate statistics per boxel for all boxels with >= min_systems visited.
 
     A boxel is the system-name prefix after stripping the trailing -N index,
     e.g. "Swoilz TV-B a40" for "Swoilz TV-B a40-1", "Swoilz TV-B a40-2", etc.
     Only procedurally-named systems (containing XX-X grid code) are included.
+
+    `system_addresses`, if given, restricts everything to that set of systems
+    (e.g. just the ones visited on a trip) — every per-boxel figure is then
+    computed only from those systems, not the commander's whole history.
 
     Per-boxel data includes: primary star class distribution, all star subtypes,
     per-planet-subtype stats (systems, TF, landable, atmosphere, bio/geo signals),
@@ -1428,6 +1433,8 @@ def boxels_data(conn: sqlite3.Connection, min_systems: int = 2) -> list[dict]:
     sys_rows = conn.execute(
         "SELECT system_address, name, star_class, first_seen_at FROM systems"
     ).fetchall()
+    if system_addresses is not None:
+        sys_rows = [r for r in sys_rows if r[0] in system_addresses]
 
     groups: dict[str, list] = defaultdict(list)
     for sa, name, sc, fv in sys_rows:
