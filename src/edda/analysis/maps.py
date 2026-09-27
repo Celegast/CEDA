@@ -1118,6 +1118,47 @@ _EXOBIO_COLORS = [
     "#6C4516", "#0D2A63", "#AF0038", "#222A2A",
 ]
 
+# Genus order backing the boxel-detail species tags' JS colouring (same
+# palette, indexed by genus instead of species) — kept here too so Python
+# call sites (e.g. the trip report) can fall back to it for species outside
+# the value>8M set plot_exobio_combined_3d actually colours.
+_EXOBIO_GENUS_ORDER = [
+    "aleoida", "bacterium", "cactoida", "clypeus", "concha",
+    "electricae", "fonticulua", "frutexa", "fumerola", "fungoida",
+    "osseus", "recepta", "sinuous", "stratum", "tubus", "tussock",
+    "aeternitas", "amphora", "anemone", "bark", "brain", "crystalline",
+    "lasso", "vents",
+]
+
+_exobio_species_colors_cache: dict[str, str] | None = None
+
+
+def species_colour(name: str) -> str:
+    """Hex colour for a species name, matching plot_exobio_combined_3d's own
+    colouring for its top value (>8M cr) species — same palette, same
+    value-descending order, so it lines up with what that 3D map actually
+    shows for most commanders (it only draws a trace, and thus assigns a
+    colour, for species with at least one recorded location). Species
+    outside that top set — the map itself never colours them — fall back to
+    a colour keyed by genus from the same palette, so at least related
+    species land in the same family rather than an arbitrary one."""
+    global _exobio_species_colors_cache
+    if _exobio_species_colors_cache is None:
+        from .valuation import SPECIES_VALUES
+        high_value = sorted(
+            (sp for sp, v in SPECIES_VALUES.items() if v > 8_000_000),
+            key=lambda sp: -SPECIES_VALUES[sp],
+        )
+        _exobio_species_colors_cache = {
+            sp: _EXOBIO_COLORS[i % len(_EXOBIO_COLORS)] for i, sp in enumerate(high_value)
+        }
+    if name in _exobio_species_colors_cache:
+        return _exobio_species_colors_cache[name]
+    genus = (name or "").split(" ")[0].lower()
+    if genus in _EXOBIO_GENUS_ORDER:
+        return _EXOBIO_COLORS[_EXOBIO_GENUS_ORDER.index(genus) % len(_EXOBIO_COLORS)]
+    return "#8899cc"
+
 
 def plot_exobio_combined_3d(
     species_data: list[tuple[str, pd.DataFrame]],

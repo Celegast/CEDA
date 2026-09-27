@@ -406,20 +406,36 @@ def _records_table(records: pd.DataFrame) -> str:
     )
 
 
-def _systems_table(sys_df: pd.DataFrame) -> str:
+def _species_tag(name: str, count: int = 1) -> str:
+    fg = mp.species_colour(name)
+    r, g, b = int(fg[1:3], 16), int(fg[3:5], 16), int(fg[5:7], 16)
+    bg = f"#{r // 5:02x}{g // 5:02x}{b // 5:02x}"
+    suffix = f' <span style="color:#fff">×{count}</span>' if count > 1 else ""
+    return (f'<span class="bio-tag" style="color:{fg};border:1px solid {fg};'
+            f'background:{bg}">{name}{suffix}</span>')
+
+
+def _systems_table(sys_df: pd.DataFrame,
+                   species_by_sys: dict[int, list[tuple[str, int]]] | None = None) -> str:
     if sys_df.empty:
         return '<p class="empty">No jump data.</p>'
+    species_by_sys = species_by_sys or {}
+
+    def _species_cell(sa: int) -> str:
+        tags = "".join(_species_tag(sp, cnt) for sp, cnt in species_by_sys.get(sa, []))
+        return tags or '<span class="dim">—</span>'
+
     rows = "".join(
         f"<tr>"
-        f"<td>{str(r['timestamp'])[:19].replace('T',' ')}</td>"
-        f"<td><span class='sys-link' data-sa='{r['system_address']}'>{r['name']}</span></td>"
+        f"<td class=\"nowrap\">{str(r['timestamp'])[:19].replace('T',' ')}</td>"
+        f"<td class=\"nowrap\"><span class='sys-link' data-sa='{r['system_address']}'>{r['name']}</span></td>"
         f"<td>{r['star_class'] or '?'}</td>"
         f'<td class="num">{(r["jump_dist"] or 0):.2f}</td>'
         f'<td class="num">{int(r["bodies_scanned"])}</td>'
         f'<td class="num">{int(r["first_disc"])}</td>'
         f'<td class="num">{int(r["bio_bodies"])}</td>'
         f'<td class="num">{int(r["bio_signals"])}</td>'
-        f'<td class="num">{int(r["bio_sampled"])}</td>'
+        f"<td>{_species_cell(int(r['system_address']))}</td>"
         f"</tr>"
         for _, r in sys_df.iterrows()
     )
@@ -427,7 +443,7 @@ def _systems_table(sys_df: pd.DataFrame) -> str:
         '<div class="table-wrap table-scroll"><table class="sortable">'
         "<thead><tr><th>Timestamp</th><th>System</th><th>Star class</th>"
         "<th>Dist (ly)</th><th>Bodies</th><th>1st disc</th>"
-        "<th>Bio bodies</th><th>Bio signals</th><th>Bio sampled</th></tr></thead>"
+        "<th>Bio bodies</th><th>Bio signals</th><th>Sampled species</th></tr></thead>"
         f"<tbody>{rows}</tbody></table></div>"
     )
 
@@ -501,6 +517,7 @@ th.sort-desc::after { content: " ▼"; font-size: 0.65em; }
 td { padding: 5px 10px; border-bottom: 1px solid #161630; }
 tr:hover td { background: #111133; }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.nowrap { white-space: nowrap; }
 tr.total-row td { background: #111133; font-weight: 600; color: #aabbee;
                   border-top: 1px solid #333366; }
 
@@ -526,6 +543,13 @@ tr.total-row td { background: #111133; font-weight: 600; color: #aabbee;
   border-radius: 3px; font-size: 0.9em; background: #0c0c22; color: #5a6888;
   font-family: inherit;
 }
+
+/* species tags — Systems Visited table */
+.bio-tag {
+    display: inline-block; border-radius: 3px;
+    padding: 1px 5px; margin: 1px 2px; font-size: 0.78em; white-space: nowrap;
+}
+.dim { color: #556; }
 """
 
 
@@ -642,7 +666,8 @@ def build_trip_report(
     records  = st.trip_personal_records(conn, date_from, date_to)
 
     print("  Systems visited...")
-    sys_df   = st.trip_systems_visited(conn, date_from, date_to)
+    sys_df         = st.trip_systems_visited(conn, date_from, date_to)
+    species_by_sys = st.trip_species_by_system(conn, date_from, date_to)
 
     print("  Boxels...")
     trip_sa    = set(int(x) for x in sys_df["system_address"].dropna())
@@ -756,7 +781,7 @@ def build_trip_report(
         _section("Planet Types", _planet_table(bodies)),
         _section("Personal Bests", _records_table(records)),
         _section("Boxels", _build_boxels_section()),
-        _section("Systems Visited", _systems_table(sys_df)),
+        _section("Systems Visited", _systems_table(sys_df, species_by_sys)),
     ]
 
     modal_html = _SYS_MODAL_HTML

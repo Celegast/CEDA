@@ -1984,6 +1984,29 @@ def trip_body_breakdown_grouped(conn: sqlite3.Connection,
                                  "mapped", "first_mapped"])
 
 
+def trip_species_by_system(conn: sqlite3.Connection,
+                           date_from: str, date_to: str) -> dict[int, list[tuple[str, int]]]:
+    """system_address -> sorted [(species_localised, bodies_sampled), ...],
+    from organic scans completed (scan_state='Analyse') during the trip
+    window — feeds the coloured species tags in the trip report's Systems
+    Visited table. The count is how many distinct bodies in that system
+    that species was sampled on (>1 shown as a "×N" suffix on the tag)."""
+    lo, hi = _ts_bounds(date_from, date_to)
+    rows = conn.execute("""
+        SELECT system_address, species_localised, COUNT(DISTINCT body_id)
+        FROM organic_scans
+        WHERE scan_state = 'Analyse' AND species_localised IS NOT NULL
+          AND timestamp >= ? AND timestamp <= ?
+        GROUP BY system_address, species_localised
+    """, (lo, hi)).fetchall()
+    result: dict[int, list[tuple[str, int]]] = {}
+    for sa, sp, cnt in rows:
+        result.setdefault(sa, []).append((sp, cnt))
+    for sa in result:
+        result[sa].sort()
+    return result
+
+
 def trip_systems_visited(conn: sqlite3.Connection,
                          date_from: str, date_to: str) -> pd.DataFrame:
     """All systems jumped to during the trip, in chronological order."""
