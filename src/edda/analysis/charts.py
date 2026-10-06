@@ -315,6 +315,94 @@ def plot_species_planet_heatmap_static(df: pd.DataFrame,
     return None
 
 
+# ---------------------------------------------------------------------------
+# Star type x mass code heatmap — which system "tier" to camp on
+# ---------------------------------------------------------------------------
+
+def plot_star_mass_code_heatmap_static(df: pd.DataFrame,
+                                       out_path: Path | None = None) -> str | None:
+    """df columns: star_type, mass_code, avg_bio, n_systems (see
+    stats.star_mass_code_bio). avg_bio is the system's own average, not a
+    sum, so — unlike the genus x planet-type heatmap — there's no
+    meaningful Total row/column to add here."""
+    if df.empty:
+        return None
+    pivot = df.pivot_table(index="star_type", columns="mass_code", values="avg_bio")
+    if pivot.empty:
+        return None
+    fig, ax = plt.subplots(figsize=(max(8, len(pivot.columns) * 1.1),
+                                    max(4, len(pivot) * 0.7)))
+    sns.heatmap(pivot, ax=ax, cmap="YlGn", linewidths=0.3, linecolor="#0f0f2a",
+                annot=True, fmt=".2f", cbar_kws={"label": "Avg bio planets / system"},
+                yticklabels=True)
+    ax.set_title("Star Type × Mass Code — Avg Bio Planets per System")
+    ax.set_xlabel("Mass code")
+    ax.set_ylabel("Star type")
+    plt.setp(ax.get_xticklabels(), rotation=0, fontsize=8)
+    plt.setp(ax.get_yticklabels(), rotation=0, fontsize=8)
+    if out_path is None:
+        return _fig_to_b64(fig)
+    _save_static(fig, out_path)
+    return None
+
+
+def plot_star_mass_code_heatmap_interactive(df: pd.DataFrame,
+                                            out_path: Path | None = None) -> go.Figure | None:
+    """Interactive counterpart to plot_star_mass_code_heatmap_static — same
+    data, hover shows the sample size (n_systems) behind each average so a
+    thin cell (e.g. 15 systems) isn't mistaken for as solid as a 2,000+
+    system one."""
+    if df.empty:
+        return None
+    pivot_v = df.pivot_table(index="star_type", columns="mass_code", values="avg_bio")
+    pivot_n = df.pivot_table(index="star_type", columns="mass_code", values="n_systems")
+    if pivot_v.empty:
+        return None
+
+    y_labels = list(pivot_v.index)
+    x_labels = list(pivot_v.columns)
+    z = pivot_v.values
+    n = pivot_n.reindex(index=pivot_v.index, columns=pivot_v.columns).values
+
+    data_max = np.nanmax(z)
+    annotations = []
+    for i, y_lbl in enumerate(y_labels):
+        for j, x_lbl in enumerate(x_labels):
+            val = z[i, j]
+            if np.isnan(val):
+                continue
+            color = "white" if val > data_max * 0.5 else "#111111"
+            annotations.append(dict(
+                x=x_lbl, y=y_lbl, text=f"{val:.2f}",
+                showarrow=False, font=dict(size=12, color=color),
+                xref="x", yref="y",
+            ))
+
+    fig = go.Figure(go.Heatmap(
+        z=z, x=x_labels, y=y_labels,
+        customdata=n,
+        colorscale="YlGn", zmin=0, zmax=data_max,
+        colorbar=dict(title=dict(text="Avg bio\nplanets", font=dict(color="white")),
+                      tickfont=dict(color="white")),
+        hovertemplate=("Star: %{y}<br>Mass code: %{x}<br>Avg bio planets: %{z:.2f}"
+                       "<br>Systems sampled: %{customdata}<extra></extra>"),
+    ))
+    fig.update_layout(
+        title="Star Type × Mass Code — Avg Bio Planets per System",
+        paper_bgcolor="#0a0a1a", plot_bgcolor="#0f0f2a", font_color="white",
+        height=max(400, len(y_labels) * 35 + 150),
+        annotations=annotations,
+        xaxis=dict(title="Mass code"),
+        yaxis=dict(title="Star type"),
+    )
+    fig.update_yaxes(autorange="reversed")
+
+    if out_path is None:
+        return fig
+    _write_interactive(fig, out_path)
+    return None
+
+
 def plot_species_planet_heatmap_interactive(df: pd.DataFrame,
                                             out_path: Path | None = None) -> go.Figure | None:
     if df.empty:

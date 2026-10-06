@@ -3811,10 +3811,12 @@ def build_dashboard(conn: sqlite3.Connection, out_path: Path) -> None:
     df_oval    = st.organic_values_table(conn)
     df_species = st.top_species(conn)
     df_sxp     = st.species_by_planet_type(conn)
+    df_smc     = st.star_mass_code_bio(conn)
     exobio_tabs = [
         ("Top Organisms",       _img(ch.plot_top_species_static(df_species, None))),
         ("Income by Species",   _plotly(ch.plot_organic_value_by_species_interactive(df_oval, None))),
         ("Genus × Planet Type", _plotly(ch.plot_species_planet_heatmap_interactive(df_sxp, None))),
+        ("Star Type × Mass Code", _plotly(ch.plot_star_mass_code_heatmap_interactive(df_smc, None))),
         ("By Planet (static)",  _img(ch.plot_organic_value_by_planet_type_static(df_oval, None))),
     ]
     # He% vs species tabs for every high-value biological (≥ 8 MCr) found in the data

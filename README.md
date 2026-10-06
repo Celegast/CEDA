@@ -61,8 +61,9 @@ one or more; reports merge the selected databases.
   ![Species catalogue](docs/screenshots/species-catalogue.png)
 
   ![Body-type catalogue](docs/screenshots/body-catalogue.png)
-- **Exobiology** — species log by genus, value breakdowns, genus × planet-type
-  heatmap, 3D species maps, and a He% vs Stratum Tectonicas probability chart.
+- **Exobiology** — species log by genus, value breakdowns, genus × planet-type and
+  star-type × mass-code heatmaps, 3D species maps, and a He% vs Stratum Tectonicas
+  probability chart.
 
   ![He% vs Stratum Tectonicas chart](docs/screenshots/metallicity-vs-tectonicas.png)
 - **Notable Stellar Phenomena** — every NSP codex type on a colour-coded 3D map,

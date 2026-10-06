@@ -36,6 +36,8 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from .stats import STARS, STAR_FULL, _SUBTYPE_STAR
+
 # Source TSVs live under game_codex/ at the project root — data, not package
 # code — the same way other reports' default output paths are relative to cwd.
 GAME_CODEX_DIR = Path.cwd() / "game_codex"
@@ -68,14 +70,13 @@ CODEX_REGION = {
     39: "Tenebrae", 40: "The Abyss", 41: "Kepler's Crest", 42: "The Void",
 }
 
-# star-type columns for the matrix (Missing Colours grid order)
-STARS = ["O", "B", "A", "F", "G", "K", "M", "L", "T", "TTS", "AeBe", "Y", "W", "D", "N"]
+# star-type columns for the matrix (Missing Colours grid order).
+# STARS / STAR_FULL / _SUBTYPE_STAR now live in stats.py (imported above) so
+# this report and the dashboard's Star Type x Mass Code heatmap can't drift
+# apart on what counts as, say, a white dwarf.
 STAR_LABEL = {"O": "O", "B": "B", "A": "A", "F": "F", "G": "G", "K": "K", "M": "M",
               "L": "L", "T": "T", "TTS": "TTS", "AeBe": "AeBe", "Y": "Y", "W": "WR",
               "D": "WD", "N": "NS"}
-STAR_FULL = {"O": "O", "B": "B", "A": "A", "F": "F", "G": "G", "K": "K", "M": "M",
-             "L": "L Dwarf", "T": "T Dwarf", "TTS": "T Tauri", "AeBe": "Herbig Ae/Be",
-             "Y": "Y Brown Dwarf", "W": "Wolf-Rayet", "D": "White Dwarf", "N": "Neutron Star"}
 EXOTIC = {"O", "W", "AeBe"}   # bio around these is near-nonexistent galaxy-wide
 EASY = {"F", "G", "K", "M", "A", "Y"}
 
@@ -319,20 +320,6 @@ def build_commander_leaderboard(discoverer_counts: collections.Counter):
         "total_cmdrs": len(ranked),
         "total_firsts": sum(discoverer_counts.values()),
     }
-
-
-_SUBTYPE_STAR = {}
-for _c, _subs in {
-    "O": {"O"}, "B": {"B", "B_BlueWhiteSuperGiant"}, "A": {"A", "A_BlueWhiteSuperGiant"},
-    "F": {"F", "F_WhiteSuperGiant"}, "G": {"G", "G_WhiteSuperGiant"},
-    "K": {"K", "K_OrangeGiant"}, "M": {"M", "M_RedGiant", "M_RedSuperGiant"},
-    "L": {"L"}, "T": {"T"}, "TTS": {"TTS"}, "AeBe": {"AeBe"}, "Y": {"Y"},
-    "W": {"W", "WC", "WN", "WO", "WNC"},
-    "D": {"D", "DA", "DB", "DC", "DAB", "DAV", "DAZ", "DBV", "DBZ", "DCV", "DQ", "DO", "DOV", "DX"},
-    "N": {"N"},
-}.items():
-    for _s in _subs:
-        _SUBTYPE_STAR[_s] = _c
 
 
 def commander_names(conn: sqlite3.Connection) -> set[str]:

@@ -35,6 +35,77 @@ _SECTOR_RE = re.compile(r"^(.*?)\s+[A-Z]{2}-[A-Z]\b")
 #           "Pueloe BZ-A d123"       → "Pueloe BZ-A d"
 _BOXEL_RE = re.compile(r"-\d+$|\d+$")
 
+# The letter right before the final N-NNNN in a procedural name — informally
+# the "mass code": a rough richness tier from galaxy generation (low letters
+# are sparse, richness rises with the letter, though not perfectly linearly
+# — see star_mass_code_bio()). Example: "Ogaiws PJ-Q e5-6470" → mass code "e".
+_MASS_CODE_RE = re.compile(r"\s[A-Z]{2}-[A-Z]\s([a-z])\d*-\d+$")
+
+# Journal body.subtype -> the coarse star-type bucket exobiology colour
+# variants (and this heatmap) key off. Shared with codex_report.py so the
+# two never drift apart on what counts as, say, a white dwarf.
+STARS = ["O", "B", "A", "F", "G", "K", "M", "L", "T", "TTS", "AeBe", "Y", "W", "D", "N"]
+STAR_FULL = {"O": "O", "B": "B", "A": "A", "F": "F", "G": "G", "K": "K", "M": "M",
+             "L": "L Dwarf", "T": "T Dwarf", "TTS": "T Tauri", "AeBe": "Herbig Ae/Be",
+             "Y": "Y Brown Dwarf", "W": "Wolf-Rayet", "D": "White Dwarf", "N": "Neutron Star"}
+_SUBTYPE_STAR: dict[str, str] = {}
+for _c, _subs in {
+    "O": {"O"}, "B": {"B", "B_BlueWhiteSuperGiant"}, "A": {"A", "A_BlueWhiteSuperGiant"},
+    "F": {"F", "F_WhiteSuperGiant"}, "G": {"G", "G_WhiteSuperGiant"},
+    "K": {"K", "K_OrangeGiant"}, "M": {"M", "M_RedGiant", "M_RedSuperGiant"},
+    "L": {"L"}, "T": {"T"}, "TTS": {"TTS"}, "AeBe": {"AeBe"}, "Y": {"Y"},
+    "W": {"W", "WC", "WN", "WO", "WNC"},
+    "D": {"D", "DA", "DB", "DC", "DAB", "DAV", "DAZ", "DBV", "DBZ", "DCV", "DQ", "DO", "DOV", "DX"},
+    "N": {"N"},
+}.items():
+    for _s in _subs:
+        _SUBTYPE_STAR[_s] = _c
+
+
+def star_mass_code_bio(conn: sqlite3.Connection, min_systems: int = 5) -> pd.DataFrame:
+    """(star_type, mass_code, avg_bio, n_systems) — one row per combination
+    with at least min_systems sampled, for the Star Type x Mass Code
+    heatmap. avg_bio is the average number of bio-signal planets in systems
+    that contain >= 1 star of that type and that mass code (not bio
+    specifically attributed to that star — the whole system's yield, since
+    that's what decides whether a system is worth the detour)."""
+    star_rows = conn.execute("""
+        SELECT system_address, subtype FROM bodies
+        WHERE body_type = 'Star' AND subtype IS NOT NULL
+    """).fetchall()
+    sys_types: dict[int, set[str]] = {}
+    for sa, subtype in star_rows:
+        code = _SUBTYPE_STAR.get(subtype)
+        if code:
+            sys_types.setdefault(sa, set()).add(code)
+
+    sys_rows = conn.execute("""
+        SELECT s.system_address, s.name,
+               (SELECT COUNT(*) FROM bodies b WHERE b.system_address = s.system_address
+                  AND b.body_type = 'Planet' AND b.bio_signals > 0) AS n_bio
+        FROM systems s
+    """).fetchall()
+
+    from collections import defaultdict
+    cells: dict[tuple[str, str], list[int]] = defaultdict(list)
+    for sa, name, n_bio in sys_rows:
+        types = sys_types.get(sa)
+        if not types:
+            continue
+        m = _MASS_CODE_RE.search(name)
+        if not m:
+            continue
+        mc = m.group(1)
+        for star_type in types:
+            cells[(star_type, mc)].append(n_bio)
+
+    rows = [
+        {"star_type": st, "mass_code": mc, "avg_bio": sum(vals) / len(vals), "n_systems": len(vals)}
+        for (st, mc), vals in cells.items()
+        if len(vals) >= min_systems
+    ]
+    return pd.DataFrame(rows, columns=["star_type", "mass_code", "avg_bio", "n_systems"])
+
 # "Scan effort" index — how tedious a boxel's systems are to fully scan.
 # Per system: raw = _EFFORT_PLANET_W * planets + moons  (stars are free, a moon
 # costs far more than a planet). Averaged over the boxel's systems, then scaled
