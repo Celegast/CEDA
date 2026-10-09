@@ -345,7 +345,7 @@ def _rle_encode_row(row: list[int]) -> list[tuple[int, int, int]]:
 
 
 def _landmarks_svg(ncols: int, nrows: int) -> str:
-    """Sol / Colonia / Sag A* / Beagle Point, plotted at their real galactic
+    """Sol / Colonia / Sag A* / Beagle Point / Rainbow's End, plotted at their real galactic
     position — same landmark list and same region-bitmap coordinate system
     (_REG_X0/_REG_Z0/_REG_PX_SZ) the dashboard's own galaxy maps use — and
     flipped to match _build_region_map_svg's own row-flip (rows only, so
@@ -428,7 +428,7 @@ def _build_region_map_svg(reg_stats: dict[str, tuple[int, int]]) -> str:
     stroked per-cell — that produced a hatched, flicker-prone look, since
     fixed by tracing real boundary edges once instead). Each region shows
     its viable regional-firsts count (amber for the higher-opportunity
-    third), plus Sol / Colonia / Sag A* / Beagle Point plotted at their real
+    third), plus Sol / Colonia / Sag A* / Beagle Point / Rainbow's End plotted at their real
     position (see _landmarks_svg). Region names aren't drawn in-shape —
     some are too long to fit small slivers legibly — they show in a label
     below the map on hover instead (_region_map_js).

@@ -2104,9 +2104,10 @@ _REG_PX_SZ =  4096.0 / 83   # ly per pixel (≈ 49.35 ly)
 
 # Reference landmarks (ED galactic coordinates): (name, x, y, z, colour)
 _LANDMARKS = [
-    ("Sol",           0,           0,           0,           "yellow"),
-    ("Colonia",      -9530.5,     -910.28125,  19808.125,   "#ff9944"),
-    ("Sag A*",        25.21875,   -20.90625,   25899.96875, "#ff44aa"),
-    ("Beagle Point", -1111.5625,  -134.21875,  65269.75,    "#44ffcc"),
+    ("Sol",            0,           0,           0,           "yellow"),
+    ("Colonia",       -9530.5,     -910.28125,  19808.125,   "#ff9944"),
+    ("Sag A*",         25.21875,   -20.90625,   25899.96875, "#ff44aa"),
+    ("Beagle Point",  -1111.5625,  -134.21875,  65269.75,    "#44ffcc"),
+    ("Rainbow's End", 21481.40625, -1004.5625,  43369.4375,  "#4488ff"),
 ]
 
