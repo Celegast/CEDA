@@ -1,12 +1,25 @@
-"""Commander configuration — persistent state in .edda/config.json."""
+"""Commander configuration — persistent state in .ceda/config.json."""
 
 import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-_EDDA_DIR = Path(".edda")
-_CONFIG_FILE = _EDDA_DIR / "config.json"
+_CEDA_DIR = Path(".ceda")
+_CONFIG_FILE = _CEDA_DIR / "config.json"
+
+
+def _migrate_legacy_dir() -> None:
+    """One-time migration of the old .edda/ data folder (pre-rename) to .ceda/."""
+    legacy = Path(".edda")
+    if legacy.exists() and not _CEDA_DIR.exists():
+        try:
+            legacy.rename(_CEDA_DIR)
+        except OSError:
+            pass
+
+
+_migrate_legacy_dir()
 
 
 def _load() -> dict:
@@ -19,7 +32,7 @@ def _load() -> dict:
 
 
 def _save(cfg: dict) -> None:
-    _EDDA_DIR.mkdir(parents=True, exist_ok=True)
+    _CEDA_DIR.mkdir(parents=True, exist_ok=True)
     _CONFIG_FILE.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
 
 
@@ -29,19 +42,19 @@ def _safe_name(name: str) -> str:
 
 
 def get_commander_db_path(name: str) -> Path:
-    """Return the .edda/<safe_name>.db path for a named commander."""
-    return _EDDA_DIR / f"{_safe_name(name)}.db"
+    """Return the .ceda/<safe_name>.db path for a named commander."""
+    return _CEDA_DIR / f"{_safe_name(name)}.db"
 
 
 def list_commanders() -> list[str]:
-    """Return display names of all commanders with a .edda/*.db file."""
+    """Return display names of all commanders with a .ceda/*.db file."""
     cfg = _load()
     known: dict[str, str] = cfg.get("commanders", {})
 
     names: list[str] = []
     seen: set[str] = set()
-    if _EDDA_DIR.exists():
-        for db_file in sorted(_EDDA_DIR.glob("*.db")):
+    if _CEDA_DIR.exists():
+        for db_file in sorted(_CEDA_DIR.glob("*.db")):
             stem = db_file.stem
             display = known.get(stem, stem)
             if display not in seen:

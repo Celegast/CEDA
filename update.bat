@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-echo === EDDA update ===
+echo === CEDA update ===
 
 :: ---------------------------------------------------------------
 :: Step 1: Git pull

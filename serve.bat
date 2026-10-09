@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-echo === EDDA Query Builder ===
+echo === CEDA Query Builder ===
 echo.
 
 if not exist ".venv" (

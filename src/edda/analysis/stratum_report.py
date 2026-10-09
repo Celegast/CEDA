@@ -1,7 +1,7 @@
 """
 Stratum Tectonicas research report.
 
-Queries the EDDA database for High Metal Content bodies with exactly one
+Queries the CEDA database for High Metal Content bodies with exactly one
 biological signal, thin atmosphere, and surface temperature >= 165 K
 (the canonical filter for Stratum Tectonicas candidates).
 

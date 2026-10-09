@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-echo === EDDA setup ===
+echo === CEDA setup ===
 echo.
 
 set PDM=pdm

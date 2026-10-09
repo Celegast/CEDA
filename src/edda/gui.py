@@ -1,4 +1,4 @@
-"""EDDA desktop control panel — tkinter GUI, no Flask required."""
+"""CEDA desktop control panel — tkinter GUI, no Flask required."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ from tkinter import messagebox, ttk
 
 from . import __version__ as _VERSION
 from .config import (
-    _EDDA_DIR,
+    _CEDA_DIR,
     get_active_commander, get_commander_db_path, get_selected_commanders,
     get_ui_state, list_commanders,
     set_active_commander, set_selected_commanders, set_ui_state,
@@ -169,10 +169,10 @@ def _install_shortcut() -> tuple[bool, str]:
         return False, f"pythonw.exe not found next to {sys.executable}"
 
     # Write the new star ICO — delete old file first to bust Explorer's icon cache
-    ico = (_EDDA_DIR / "edda.ico").resolve()
+    ico = (_CEDA_DIR / "ceda.ico").resolve()
     ico_err = ""
     try:
-        _EDDA_DIR.mkdir(parents=True, exist_ok=True)
+        _CEDA_DIR.mkdir(parents=True, exist_ok=True)
         if ico.exists():
             ico.unlink()
         ico.write_bytes(_make_ico())
@@ -190,7 +190,7 @@ def _install_shortcut() -> tuple[bool, str]:
     except Exception:
         desktop = Path.home() / "Desktop"
 
-    lnk_path = desktop / "EDDA Control Panel.lnk"
+    lnk_path = desktop / "CEDA Control Panel.lnk"
 
     def _esc(p: str) -> str:
         return str(p).replace("'", "''")
@@ -203,7 +203,7 @@ def _install_shortcut() -> tuple[bool, str]:
         f"$sc.Arguments = '-c \"from edda.gui import main; main()\"'\n"
         f"$sc.WorkingDirectory = '{_esc(cwd)}'\n"
         f"{ico_arg}"
-        f"$sc.Description = 'EDDA Control Panel'\n"
+        f"$sc.Description = 'CEDA Control Panel'\n"
         f"$sc.Save()\n"
     )
 
@@ -484,7 +484,7 @@ _DATE_FIELDS = {("trip", "from"), ("trip", "to")}
 class _App(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
-        self.title(f"EDDA Control Panel  v{_VERSION}")
+        self.title(f"CEDA Control Panel  v{_VERSION}")
         self.geometry("800x700")
         self.resizable(True, True)
         _theme(self)
@@ -764,7 +764,7 @@ class _App(tk.Tk):
 
     def _switch_cmdr(self) -> None:
         if not self._cmdr_selected_name:
-            messagebox.showinfo("EDDA", "Click a commander row to select it.")
+            messagebox.showinfo("CEDA", "Click a commander row to select it.")
             return
         set_active_commander(self._cmdr_selected_name)
         self._refresh_commanders()
@@ -841,7 +841,7 @@ class _App(tk.Tk):
             fr = g("from", "YYYY-MM-DD[THH:MM]")
             to = g("to",   "YYYY-MM-DD[THH:MM]")
             if not fr or not to:
-                messagebox.showwarning("EDDA",
+                messagebox.showwarning("CEDA",
                     "Trip report requires both From and To dates.")
                 return None
             args += ["--from", fr, "--to", to]
@@ -892,7 +892,7 @@ class _App(tk.Tk):
 
     def _run(self, key: str) -> None:
         if self._task_thread and self._task_thread.is_alive():
-            messagebox.showinfo("EDDA", "A task is already running.")
+            messagebox.showinfo("CEDA", "A task is already running.")
             return
         args = self._build_args(key)
         if args is None:
@@ -940,7 +940,7 @@ class _App(tk.Tk):
         no error noise for users without git set up. A manual click
         (silent=False) always reports what happened."""
         if not silent:
-            self._log(f"> EDDA v{_VERSION} — checking for updates…\n", "hdr")
+            self._log(f"> CEDA v{_VERSION} — checking for updates…\n", "hdr")
 
         def _go() -> None:
             try:
@@ -993,7 +993,7 @@ class _App(tk.Tk):
 
     def _show_update_dialog(self) -> None:
         top = tk.Toplevel(self, bg=_SURF2)
-        top.title("EDDA Update Available")
+        top.title("CEDA Update Available")
         top.resizable(False, False)
         top.transient(self)
         top.grab_set()
@@ -1033,7 +1033,7 @@ class _App(tk.Tk):
         # so the button should go back to an immediately-retryable state
         # rather than quietly reverting to "no update known".
         self._update_btn.config(text="Updating…", state="disabled")
-        self._log(f"> EDDA v{_VERSION} — applying update…\n", "hdr")
+        self._log(f"> CEDA v{_VERSION} — applying update…\n", "hdr")
 
         def _go() -> None:
             try:
@@ -1083,17 +1083,17 @@ class _App(tk.Tk):
     def _on_update_done(self) -> None:
         self._update_available = False
         self._update_btn.config(text="Check for Updates", style="TButton", state="normal")
-        self._log("> Update applied. Restart EDDA to run the new version.\n", "ok")
-        if messagebox.askyesno("EDDA — Update applied",
+        self._log("> Update applied. Restart CEDA to run the new version.\n", "ok")
+        if messagebox.askyesno("CEDA — Update applied",
                                "Update installed successfully.\n\n"
-                               "Restart EDDA now to run the new version?"):
+                               "Restart CEDA now to run the new version?"):
             try:
                 subprocess.Popen([sys.executable, "-c",
                                   "from edda.gui import main; main()"],
                                  cwd=str(Path.cwd()))
             except Exception as exc:
-                messagebox.showerror("EDDA", f"Couldn't restart automatically: {exc}\n"
-                                             "Please close and reopen EDDA manually.")
+                messagebox.showerror("CEDA", f"Couldn't restart automatically: {exc}\n"
+                                             "Please close and reopen CEDA manually.")
                 return
             self.destroy()
 
@@ -1207,7 +1207,7 @@ class _App(tk.Tk):
 
     def _maybe_records_popup(self) -> None:
         """After a dashboard build, pop a box if any personal records were beaten."""
-        f = _EDDA_DIR / "records_diff.json"
+        f = _CEDA_DIR / "records_diff.json"
         try:
             d = json.loads(f.read_text(encoding="utf-8"))
         except Exception:
@@ -1240,7 +1240,7 @@ class _App(tk.Tk):
         head = (f"You beat {len(broken)} personal record"
                 f"{'s' if len(broken) != 1 else ''}"
                 + (f" since {since[:10]}" if since else "") + ":")
-        messagebox.showinfo("EDDA — New records!", head + "\n\n" + "\n".join(lines))
+        messagebox.showinfo("CEDA — New records!", head + "\n\n" + "\n".join(lines))
 
     def _poll(self) -> None:
         try:

@@ -7,7 +7,7 @@ from typing import Optional
 from .schema import SCHEMA_SQL
 
 
-_DEFAULT_DB = Path(".edda") / "ed.db"
+_DEFAULT_DB = Path(".ceda") / "ed.db"
 
 
 def get_db_path(override: Optional[Path] = None) -> Path:

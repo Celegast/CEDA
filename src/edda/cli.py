@@ -83,7 +83,7 @@ def cmd_import(argv: list[str] | None = None) -> None:
 
     if args.db is None:
         # Multi-commander mode: auto-detect commanders from journal files and
-        # create one .edda/<name>.db per commander.
+        # create one .ceda/<name>.db per commander.
         run_import_all_commanders(
             journal_dir=args.journal_dir,
             force=args.force,
@@ -198,7 +198,7 @@ def cmd_trip(argv: list[str] | None = None) -> None:
 
         lo_disp = data["date_from"][:19].replace("T", " ")
         hi_disp = data["date_to"][:19].replace("T", " ")
-        print(f"\n=== EDDA -- Trip Statistics  [{lo_disp} to {hi_disp}] ===\n")
+        print(f"\n=== CEDA -- Trip Statistics  [{lo_disp} to {hi_disp}] ===\n")
 
         summary_labels = {
             "systems_visited":    "Systems visited",

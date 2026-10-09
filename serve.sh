@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== EDDA Query Builder ==="
+echo "=== CEDA Query Builder ==="
 echo
 
 if [ ! -d ".venv" ]; then

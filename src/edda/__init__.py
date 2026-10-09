@@ -1,4 +1,4 @@
-"""Elite Dangerous Data Analyser — journal parser, database, and analytics dashboard."""
+"""CEDA — Commander Exploration Data Analyzer: journal parser, database, and analytics dashboard."""
 
 from pathlib import Path
 import tomllib

@@ -11,7 +11,7 @@ NC='\033[0m'
 step() { echo; echo -e "${CYAN}[$1/5] $2${NC}"; }
 die()  { echo -e "${RED}Error: $*${NC}" >&2; exit 1; }
 
-echo -e "${YELLOW}=== EDDA update ===${NC}"
+echo -e "${YELLOW}=== CEDA update ===${NC}"
 
 # 1. Pull latest code
 step 1 "Pulling latest changes..."

@@ -232,7 +232,7 @@ def run_import_all_commanders(
 ) -> dict[str, dict]:
     """
     Scan the journal directory, group files by commander, and import each
-    commander's files into a separate .edda/<name>.db database.
+    commander's files into a separate .ceda/<name>.db database.
 
     Auto-sets the active commander in config if exactly one is found and none
     is currently active.

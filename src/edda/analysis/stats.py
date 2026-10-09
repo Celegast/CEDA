@@ -128,7 +128,7 @@ _TECTONICAS_HE_RANGES: list[tuple[float, float]] = [
 ]
 
 # He% ranges where average system exploration value exceeds 3.5 MCr.
-# Source: EDDA "Boxel He% vs Average System Value" chart.
+# Source: CEDA "Boxel He% vs Average System Value" chart.
 _HIGH_VALUE_HE_RANGES: list[tuple[float, float]] = [
     (24.7, 25.4),
     (26.2, 26.4),

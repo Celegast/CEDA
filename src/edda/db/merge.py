@@ -1,4 +1,4 @@
-"""Merge multiple EDDA SQLite databases into a temporary combined database."""
+"""Merge multiple CEDA SQLite databases into a temporary combined database."""
 
 import atexit
 import sqlite3

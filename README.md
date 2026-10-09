@@ -1,11 +1,11 @@
-# EDDA — Elite Dangerous Data Analyser
+# CEDA — Commander Exploration Data Analyzer
 
 Turns your Elite Dangerous journal files into a local database and a self-contained
 HTML dashboard: exploration stats, galaxy maps, exobiology analysis, boxel
 analytics, trip reports, and a visual query builder. Everything runs locally — no
 account, no uploads.
 
-![EDDA dashboard overview](docs/screenshots/overview.png)
+![CEDA dashboard overview](docs/screenshots/overview.png)
 
 ## Install
 
@@ -18,12 +18,12 @@ account, no uploads.
 
 ## Run
 
-**Desktop app** — double-click **`EDDA.bat`** (Windows) / **`EDDA.sh`** (Linux/macOS).
+**Desktop app** — double-click **`CEDA.bat`** (Windows) / **`CEDA.sh`** (Linux/macOS).
 A control panel to import journals, pick which commander(s) to report on, and build
 the dashboard / trip report / research reports, with a live log and one-click
 "open when done".
 
-![EDDA control panel](docs/screenshots/gui.png)
+![CEDA control panel](docs/screenshots/gui.png)
 
 **Terminal** — everything the app does is also a command:
 
@@ -37,7 +37,7 @@ Open `dashboard.html` in any browser. Import is incremental and idempotent — r
 it any time; it resumes partially-written files and skips finished ones.
 
 **Multiple commanders:** `pdm run import` (no `--db`) auto-detects each commander in
-your journals and keeps a separate `.edda/<name>.db`. The desktop app lets you tick
+your journals and keeps a separate `.ceda/<name>.db`. The desktop app lets you tick
 one or more; reports merge the selected databases.
 
 ## What you get
@@ -142,7 +142,7 @@ still runs.) The desktop app also checks for updates on launch.
 
 ## How it works
 
-- **Database:** SQLite under `.edda/` (one file per commander, created on first
+- **Database:** SQLite under `.ceda/` (one file per commander, created on first
   import). Tables cover systems, jumps, bodies, rings, materials, bio/organic
   scans, sales, codex entries, FSS signals, missions, Powerplay merits, and
   commander/statistics snapshots. Journal events not handled *and* not on the
@@ -164,7 +164,7 @@ still runs.) The desktop app also checks for updates on launch.
 ```
 src/edda/
 ├── cli.py                  pdm run entry points
-├── gui.py                  desktop control panel (EDDA.bat)
+├── gui.py                  desktop control panel (CEDA.bat)
 ├── serve.py                Flask Query Builder (pdm run serve)
 ├── db/                     schema + connection helpers
 ├── importer/               journal discovery + per-event handlers
@@ -183,6 +183,6 @@ src/edda/
 - [klightspeed/EliteDangerousRegionMap](https://github.com/klightspeed/EliteDangerousRegionMap) — galactic region data for the map overlays
 - **CMDR SigmaExplorer** / [IGAU](https://github.com/Intergalactic-Astronomical-Union/publications) — the "Boxel Helium vs Stratum Tectonicas" research this tool's He% analysis builds on
 - [Canonn Research](https://canonn.science/) and the [ED community wiki](https://elite-dangerous.fandom.com/wiki/Elite_Dangerous_Wiki)
-- **CMDR Vithigar** & **CMDR MattG** — [Elite Observatory](https://github.com/Xjph/ObservatoryCore), which inspired many of EDDA's analytics
+- **CMDR Vithigar** & **CMDR MattG** — [Elite Observatory](https://github.com/Xjph/ObservatoryCore), which inspired many of CEDA's analytics
 - Beta testing: **[CMDR BacardEsan](https://www.twitch.tv/bacardesan)**
 - **CMDR Marxanthius** & the [Independent Explorers Association (IEA)](https://discord.gg/yCFNJdkY7D) Discord — outstanding work on exploration

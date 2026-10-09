@@ -446,7 +446,7 @@ def plot_galaxy_map_static(df: pd.DataFrame, out_path: Path | None,
 
     ax.set_xlabel("X (ly)", color="white")
     ax.set_ylabel("Z (ly)", color="white")
-    ax.set_title("EDDA — Visited Systems", color="white", fontsize=14)
+    ax.set_title("CEDA — Visited Systems", color="white", fontsize=14)
     ax.tick_params(colors="white")
     for spine in ax.spines.values():
         spine.set_edgecolor("#333355")
@@ -471,7 +471,7 @@ def plot_galaxy_side_view_static(df: pd.DataFrame, out_path: Path | None,
 
     ax.set_xlabel("X (ly)", color="white")
     ax.set_ylabel("Y (ly)", color="white")
-    ax.set_title("EDDA — Side View (galactic plane)", color="white")
+    ax.set_title("CEDA — Side View (galactic plane)", color="white")
     ax.tick_params(colors="white")
     for spine in ax.spines.values():
         spine.set_edgecolor("#333355")
@@ -658,7 +658,7 @@ def plot_sector_map_static(df: pd.DataFrame, out_path: Path | None,
     cb.ax.tick_params(colors="white")
 
     ax.set_title(
-        f"EDDA — Sector Heat Map 3D  (top {top_n} of {len(df):,} sectors)",
+        f"CEDA — Sector Heat Map 3D  (top {top_n} of {len(df):,} sectors)",
         color="white", fontsize=12, pad=12,
     )
 

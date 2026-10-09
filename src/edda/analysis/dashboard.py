@@ -1939,8 +1939,8 @@ _HTML_TEMPLATE = """\
 </div>
   <nav id="sidebar">
     <div class="sidebar-logo">
-      <div class="sidebar-logo-row">EDDA<span class="version">v{version}</span></div>
-      <span>Elite Dangerous Data Analyser</span>
+      <div class="sidebar-logo-row">CEDA<span class="version">v{version}</span></div>
+      <span>Commander Exploration Data Analyzer</span>
     </div>
 {nav}
   </nav>
@@ -2176,11 +2176,11 @@ def _diff_records(current: dict, previous: dict) -> list[dict]:
 
 def _write_records_diff(broken: list[dict], since: str | None,
                         out_path: Path) -> None:
-    """Drop a fresh .edda/records_diff.json for the GUI to pick up."""
-    from ..config import _EDDA_DIR
+    """Drop a fresh .ceda/records_diff.json for the GUI to pick up."""
+    from ..config import _CEDA_DIR
     try:
-        _EDDA_DIR.mkdir(parents=True, exist_ok=True)
-        (_EDDA_DIR / "records_diff.json").write_text(json.dumps({
+        _CEDA_DIR.mkdir(parents=True, exist_ok=True)
+        (_CEDA_DIR / "records_diff.json").write_text(json.dumps({
             "built_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "since":    since,
             "out":      str(out_path.resolve()),
@@ -3998,7 +3998,7 @@ def build_dashboard(conn: sqlite3.Connection, out_path: Path) -> None:
     _version = _edda_version
 
     html = _HTML_TEMPLATE.format(
-        title="EDDA — Elite Dangerous Data Analyser",
+        title="CEDA — Commander Exploration Data Analyzer",
         favicon_href=_FAVICON_HREF,
         plotly_js=get_plotlyjs(),
         css=_CSS,

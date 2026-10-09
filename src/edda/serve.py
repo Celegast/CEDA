@@ -964,7 +964,7 @@ _CONTROL_TEMPLATE = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EDDA Control Panel</title>
+<title>CEDA Control Panel</title>
 <style>
 :root{--bg:#0d1117;--surface:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#58a6ff;--green:#3fb950;--orange:#f0883e;--red:#f85149}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -1019,7 +1019,7 @@ nav a:hover{color:var(--accent)}
 </head>
 <body>
 <header>
-  <div class="logo">EDDA <span>v{{ version }}</span></div>
+  <div class="logo">CEDA <span>v{{ version }}</span></div>
   <nav>
     <a href="/query-builder">Query Builder &rarr;</a>
   </nav>
@@ -1229,7 +1229,7 @@ function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g
 
 loadCmdrs();
 
-// Persist trip dates in .edda/config.json via the server.
+// Persist trip dates in .ceda/config.json via the server.
 (function(){
   var fields=['t-from','t-to'];
   fetch('/api/ui-state').then(function(r){return r.json();}).then(function(d){
@@ -1256,7 +1256,7 @@ _TEMPLATE = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>EDDA Query Builder</title>
+<title>CEDA Query Builder</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:#0d0d0f;color:#c8c8c8;font-family:"Consolas","Courier New",monospace;font-size:13px;min-height:100vh}
@@ -1361,8 +1361,8 @@ tr:hover td{background:#141420}
 </head>
 <body>
 <header>
-  <h1>EDDA &middot; Query Builder</h1>
-  <span class="sub">Elite Dangerous Data Analyser</span>
+  <h1>CEDA &middot; Query Builder</h1>
+  <span class="sub">Commander Exploration Data Analyzer</span>
   <span class="sub" style="margin-left:0">v""" + "{{ version }}" + r"""</span>
 </header>
 <div class="builder">
@@ -2408,11 +2408,11 @@ renderHistory();
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         prog="pdm run serve",
-        description="Start the EDDA query builder web UI at http://localhost:5000",
+        description="Start the CEDA query builder web UI at http://localhost:5000",
     )
     parser.add_argument(
         "--db", type=Path, default=None, metavar="PATH",
-        help="Path to SQLite database (default: .edda/ed.db)",
+        help="Path to SQLite database (default: .ceda/ed.db)",
     )
     parser.add_argument(
         "--port", type=int, default=5000, metavar="PORT",
@@ -2428,7 +2428,7 @@ def main(argv: list[str] | None = None) -> None:
     _db_path = args.db
 
     url = f"http://localhost:{args.port}/"
-    print(f"EDDA Control Panel -> {url}  (Ctrl-C to stop)")
+    print(f"CEDA Control Panel -> {url}  (Ctrl-C to stop)")
     if not args.no_browser and sys.stdout and sys.stdout.isatty():
         threading.Timer(0.8, webbrowser.open, args=[url]).start()
     app.run(host="127.0.0.1", port=args.port, debug=False, threaded=True)
