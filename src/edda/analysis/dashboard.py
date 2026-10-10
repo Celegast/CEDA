@@ -2096,7 +2096,8 @@ def _records_table_html(df: pd.DataFrame) -> str:
         return '<p class="empty-note">No records yet.</p>'
     def _fmt(r) -> str:
         val = float(r["Value"])
-        val_str = f"{val:,.3f}" if val < 1_000_000 else f"{val:,.0f}"
+        val_str = (f"{val:,.3f}".rstrip("0").rstrip(".") if val < 1_000_000
+                   else f"{val:,.0f}")
         unit = str(r.get("Unit", "")).strip()
         return f"{val_str} {unit}".strip()
     rows = []

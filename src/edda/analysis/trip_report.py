@@ -396,7 +396,7 @@ def _records_table(records: pd.DataFrame) -> str:
     rows = "".join(
         f"<tr><td>{r['Record']}</td>"
         f"<td><span class='sys-link' data-sa='{r['system_address']}'>{r['Body / System']}</span></td>"
-        f'<td class="num">{r["Value"]:,.3f} {r["Unit"]}</td></tr>'
+        f'<td class="num">{f"{r["Value"]:,.3f}".rstrip("0").rstrip(".")} {r["Unit"]}</td></tr>'
         for _, r in records.iterrows()
     )
     return (

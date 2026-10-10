@@ -150,7 +150,8 @@ def cmd_stats(argv: list[str] | None = None) -> None:
             for _, r in records.iterrows():
                 val = float(r["Value"])
                 unit = str(r["Unit"])
-                val_str = f"{val:,.3f}" if val < 1_000_000 else f"{val:,.0f}"
+                val_str = (f"{val:,.3f}".rstrip("0").rstrip(".") if val < 1_000_000
+                           else f"{val:,.0f}")
                 val_with_unit = f"{val_str} {unit}".strip()
                 print(f"  {str(r['Record']):<22} {str(r['Body / System']):<40} {val_with_unit:>20}")
 
@@ -262,7 +263,8 @@ def cmd_trip(argv: list[str] | None = None) -> None:
             for _, r in records.iterrows():
                 val = float(r["Value"])
                 unit = str(r["Unit"])
-                val_str = f"{val:,.3f}" if val < 1_000_000 else f"{val:,.0f}"
+                val_str = (f"{val:,.3f}".rstrip("0").rstrip(".") if val < 1_000_000
+                           else f"{val:,.0f}")
                 val_with_unit = f"{val_str} {unit}".strip()
                 print(f"  {str(r['Record']):<22} {str(r['Body / System']):<40} {val_with_unit:>20}")
         else:
