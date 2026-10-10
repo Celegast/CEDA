@@ -3313,6 +3313,24 @@ def _build_body_section(bval_df: pd.DataFrame, cur_pos: dict | None = None,
                 f'<td class="hint-col"><span class="sys-link" data-sa="{max_sa}">{max_name}</span></td></tr>'
             )
 
+            if col == "surface_gravity_g" and "is_landable" in grp.columns:
+                land_valid = valid[grp.loc[valid.index, "is_landable"] == 1]
+                if len(land_valid) >= 2:
+                    idx_min = land_valid[col].idxmin()
+                    idx_max = land_valid[col].idxmax()
+                    min_name = land_valid.loc[idx_min, "name"]
+                    min_sa   = int(land_valid.loc[idx_min, "system_address"])
+                    max_name = land_valid.loc[idx_max, "name"]
+                    max_sa   = int(land_valid.loc[idx_max, "system_address"])
+                    prop_rows.append(
+                        f"<tr><td>Gravity, landable (g)</td>"
+                        f'<td class="hint-col-min"><span class="sys-link" data-sa="{min_sa}">{min_name}</span></td>'
+                        f'<td class="num num-center">{fmt.format(land_valid.loc[idx_min, col])}</td>'
+                        f'<td class="num num-center">{fmt.format(land_valid[col].mean())}</td>'
+                        f'<td class="num num-center">{fmt.format(land_valid.loc[idx_max, col])}</td>'
+                        f'<td class="hint-col"><span class="sys-link" data-sa="{max_sa}">{max_name}</span></td></tr>'
+                    )
+
         sys_counts = grp.groupby("system_name").size()
         top_sys = sys_counts.idxmax()
         top_sa = int(grp.loc[grp["system_name"] == top_sys, "system_address"].iloc[0])
