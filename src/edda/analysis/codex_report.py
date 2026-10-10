@@ -1389,9 +1389,27 @@ def _render(star_map, mat_map, gaps, found, regions, genus, sp_regions, sp_here,
     COVER_OK = 250      # min systems visited to trust "this region has no such star"
     UNIVERSAL = 38      # confirmed in >= this many regions -> "occurs galaxy-wide"
 
+    # (region, star) pairs where the *community* (CodexEntries.tsv) has already
+    # logged some star-gated colour variant — proof that star type occurs there,
+    # independent of whether this commander's own sample happened to catch one.
+    # Without this, a region a commander hasn't deeply scanned for a given star
+    # (e.g. 0 White Dwarfs seen in 1,630 Temple-region systems, despite WDs
+    # being ~1.5% of stars in their DB overall) gets wrongly marked "dead" even
+    # though someone has literally logged a find there.
+    confirmed_region_star: set[tuple[str, str]] = set()
+    for sp, star_cols in star_map.items():
+        col_to_star = {col: star for star, col in star_cols.items()}
+        for col, star in col_to_star.items():
+            for reg2 in found.get((sp, col), ()):
+                confirmed_region_star.add((reg2, star))
+
     def spawns(reg, star):
         """Does region `reg` carry star type `star` in enough numbers to be worth
-        hunting (galaxy sample)?  Under-sampled regions get the benefit of doubt."""
+        hunting (galaxy sample)?  Under-sampled regions get the benefit of doubt.
+        A community-confirmed sighting of that star type in the region always
+        counts, regardless of this commander's own sample."""
+        if (reg, star) in confirmed_region_star:
+            return True
         cov = cover.get(reg, 0)
         if cov < COVER_OK:
             return True
@@ -1684,7 +1702,9 @@ def _render(star_map, mat_map, gaps, found, regions, genus, sp_regions, sp_here,
                     else:
                         cells.append(f"<td class='done'>{chip(col)}</td>")
                 elif star in EXOTIC or not spawns(reg, star):
-                    why = "almost no bio around this star type" if star in EXOTIC else f"no {STAR_FULL[star]} in this region"
+                    why = ("almost no bio around this star type" if star in EXOTIC
+                           else f"no {STAR_FULL[star]} logged in this region yet — "
+                                f"unconfirmed, not necessarily absent")
                     cells.append(f"<td class='rfdead' title='{esc(sp)} – {esc(col)}: {why}'>{chip(col)}</td>")
                     any_missing = True
                 else:
