@@ -909,16 +909,32 @@ function _drawLegend() {
           }},
     ];
 
-    // Two balanced columns
-    var col1x = 16, col2x = W / 2, rowH = 30, startY = 22;
+    // "Bio detected (not sampled)" is long enough to bleed into the right
+    // column when paired on a row (e.g. onto "First discovered") — give it a
+    // dedicated full-width row, then lay out the rest in two balanced columns
+    // exactly as before.
+    var col1x = 16, col2x = W / 2, rowH = 30, startY = 22, textX = ir * 2 + 6;
+    var wideIdx = items.findIndex(function(it) { return it.lbl === 'Bio detected (not sampled)'; });
+    var wideItem = wideIdx >= 0 ? items.splice(wideIdx, 1)[0] : null;
+
+    var rows = [];
+    if (wideItem) rows.push([wideItem]);
     var half = Math.ceil(items.length / 2);
-    items.forEach(function(item, i) {
-        var lx = i < half ? col1x : col2x;
-        var ly = startY + (i < half ? i : i - half) * rowH;
-        item.draw(lx + ir, ly);
-        ctx.font = '11px sans-serif';
-        ctx.fillStyle = item.col; ctx.textAlign = 'left';
-        ctx.fillText(item.lbl, lx + ir * 2 + 6, ly + 4);
+    for (var r = 0; r < half; r++) {
+        var row = [items[r]];
+        if (half + r < items.length) row.push(items[half + r]);
+        rows.push(row);
+    }
+
+    rows.forEach(function(row, ri) {
+        var ly = startY + ri * rowH;
+        row.forEach(function(item, ci) {
+            var lx = col1x + ci * (col2x - col1x);
+            item.draw(lx + ir, ly);
+            ctx.font = '11px sans-serif';
+            ctx.fillStyle = item.col; ctx.textAlign = 'left';
+            ctx.fillText(item.lbl, lx + textX, ly + 4);
+        });
     });
 }
 
