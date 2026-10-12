@@ -798,6 +798,7 @@ KNOWN_IGNORED_EVENTS: frozenset[str] = frozenset({
     "SupercruiseEntry", "SupercruiseExit", "SupercruiseDestinationDrop",
     "FuelScoop", "ApproachBody", "LeaveBody", "ApproachSettlement",
     "LaunchSRV", "DockSRV", "SRVDestroyed", "VehicleSwitch",
+    "LaunchFighter", "LaunchVessel",
     # Ship / station interactions
     "Docked", "Undocked", "DockingGranted", "DockingDenied",
     "DockingCancelled", "DockingTimeout",
@@ -852,6 +853,7 @@ KNOWN_IGNORED_EVENTS: frozenset[str] = frozenset({
     "SharedBookmarkToSquadron", "AppliedToSquadron", "SquadronApplicationApproved",
     "ChangeCrewRole", "CrewMemberJoins", "CrewMemberQuits", "CrewMemberRoleChange",
     "EndCrewSession", "JoinACrew", "KickCrewMember", "QuitACrew",
+    "NpcCrewPaidWage",
     # Colonisation
     "ColonisationConstructionDepot", "ColonisationContribution",
     "ColonisationBeaconDeployed", "ColonisationSystemClaim",
