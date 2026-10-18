@@ -13,8 +13,10 @@ binary-encoded customdata and hover templates resolve correctly offline.
 import base64
 import json
 import math
+import os
 import re
 import sqlite3
+from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime, timezone
 from edda import __version__ as _edda_version
 from pathlib import Path
@@ -3895,33 +3897,40 @@ def build_dashboard(conn: sqlite3.Connection, out_path: Path) -> None:
     df_bt_spec  = st.body_type_spectral_distribution(conn)
     sc_totals   = st.planet_counts_by_spectral_class(conn)
 
-    sp_charts: dict[str, str] = {}
+    # Each chart below is an independent pure-function call (data in, base64
+    # PNG out) — this is by far the slowest stage in a full build (~100+ charts
+    # run one at a time), so it's dispatched across a process pool instead of
+    # run sequentially. Jobs are collected first, then run in one batch.
+    jobs: list[tuple[str, str, pd.Series, str, pd.Series | None]] = []
     for sp, grp in df_sp_spec.groupby("species"):
-        b64 = ch.plot_spectral_distribution(
-            grp.set_index("spectral_class")["count"],
-            title=str(sp), totals=sc_totals)
-        if b64:
-            sp_charts[sp] = b64
+        jobs.append(("species", str(sp), grp.set_index("spectral_class")["count"], str(sp), sc_totals))
 
-    genus_charts: dict[str, str] = {}
     if not df_sp_spec.empty and not df_oval.empty:
         for genus_label, genus_oval in df_oval.groupby("genus"):
             genus_label = genus_label or "Unknown"
             sp_in_genus = genus_oval["species"].dropna().unique()
             grp = (df_sp_spec[df_sp_spec["species"].isin(sp_in_genus)]
                    .groupby("spectral_class")["count"].sum())
-            b64 = ch.plot_spectral_distribution(
-                grp, title=str(genus_label), totals=sc_totals)
-            if b64:
-                genus_charts[genus_label] = b64
+            jobs.append(("genus", str(genus_label), grp, str(genus_label), sc_totals))
 
-    bt_charts: dict[str, str] = {}
     for bt, grp in df_bt_spec.groupby("planet_class"):
-        b64 = ch.plot_spectral_distribution(
-            grp.set_index("spectral_class")["count"],
-            title=str(bt), totals=sc_totals)
-        if b64:
-            bt_charts[bt] = b64
+        jobs.append(("body_type", str(bt), grp.set_index("spectral_class")["count"], str(bt), sc_totals))
+
+    sp_charts: dict[str, str] = {}
+    genus_charts: dict[str, str] = {}
+    bt_charts: dict[str, str] = {}
+    _result_dicts = {"species": sp_charts, "genus": genus_charts, "body_type": bt_charts}
+    max_workers = min(len(jobs), os.cpu_count() or 1) or 1
+    if len(jobs) > 1 and max_workers > 1:
+        with ProcessPoolExecutor(max_workers=max_workers) as pool:
+            for bucket, key, b64 in pool.map(ch.spectral_distribution_job, jobs):
+                if b64:
+                    _result_dicts[bucket][key] = b64
+    else:
+        for job in jobs:
+            bucket, key, b64 = ch.spectral_distribution_job(job)
+            if b64:
+                _result_dicts[bucket][key] = b64
 
     # ------------------------------------------------------------------
     # System diagram data (embedded JSON for canvas renderer)

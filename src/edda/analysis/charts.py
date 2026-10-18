@@ -10,6 +10,8 @@ import base64
 import io
 from pathlib import Path
 
+import matplotlib
+matplotlib.use("Agg")  # non-interactive backend — required for worker processes
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
@@ -1317,3 +1319,15 @@ def plot_spectral_distribution(counts: pd.Series,
     ax.set_axisbelow(True)
 
     return _fig_to_b64(fig)
+
+
+def spectral_distribution_job(job: tuple[str, str, pd.Series, str, pd.Series | None]
+                              ) -> tuple[str, str, str | None]:
+    """Picklable unit of work for parallel spectral-chart rendering (one call
+    per species/genus/body-type) — see dashboard.py's spectral-charts stage,
+    which is by far the slowest single stage in a full build and embarrassingly
+    parallel (each chart is independent, pure data in -> base64 PNG out).
+    job = (bucket, key, counts, title, totals); bucket identifies which of the
+    three result dicts (species/genus/body-type) `key` belongs to."""
+    bucket, key, counts, title, totals = job
+    return bucket, key, plot_spectral_distribution(counts, title=title, totals=totals)

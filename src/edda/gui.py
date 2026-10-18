@@ -904,6 +904,7 @@ class _App(tk.Tk):
         self._log(f"\n> {key}  {' '.join(args)}\n", "hdr")
 
         def _go() -> None:
+            rc = None
             try:
                 proc = subprocess.Popen(
                     [sys.executable, "-c", code],
@@ -913,12 +914,17 @@ class _App(tk.Tk):
                 )
                 for line in proc.stdout:
                     self._queue.put(("line", line))
-                if proc.wait() == 0 and open_path:
+                rc = proc.wait()
+                if rc == 0 and open_path:
                     self._queue.put(("open", open_path))
             except Exception as exc:
                 self._queue.put(("line", f"ERROR: {exc}\n"))
             finally:
-                self._queue.put(("done", key))
+                # rc is None if subprocess.Popen itself failed (never ran) —
+                # distinct from rc==0 (success) so the log line below can tell
+                # "exited instantly with an error" apart from "finished fine",
+                # which previously both just showed as an unqualified "Done."
+                self._queue.put(("done", (key, rc)))
 
         self._task_thread = threading.Thread(target=_go, daemon=True)
         self._task_thread.start()
@@ -1247,10 +1253,14 @@ class _App(tk.Tk):
             while True:
                 kind, data = self._queue.get_nowait()
                 if kind == "done":
-                    self._log("> Done.\n", "ok")
-                    if data == "dashboard":
-                        self._maybe_records_popup()
-                    self._schedule_poll(data)
+                    key, rc = data
+                    if rc == 0:
+                        self._log("> Done.\n", "ok")
+                        if key == "dashboard":
+                            self._maybe_records_popup()
+                    else:
+                        self._log(f"> FAILED (exit code {rc})\n", "err")
+                    self._schedule_poll(key)
                 elif kind == "open":
                     p = Path(data)
                     self._log(f"> Opening {data}\n", "dim")
