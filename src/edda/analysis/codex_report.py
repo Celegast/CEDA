@@ -421,7 +421,7 @@ def _region_border_path(grid: list[list[int]], ncols: int, nrows: int) -> str:
             "stroke='#7c8aa8' stroke-width='.35' stroke-opacity='.55'/>")
 
 
-def _build_region_map_svg(reg_stats: dict[str, tuple[int, int]]) -> str:
+def _build_region_map_svg(reg_stats: dict[str, tuple]) -> str:
     """A clickable galaxy map: each region is filled at low intensity in its
     own colour, brightening (plus a bright outline) on hover; a single thin
     outline traces every region's true perimeter on top of that (not
@@ -835,6 +835,11 @@ table.mx td{width:20px;height:18px;text-align:center;border:1px solid #12151f}
 table.mx td.sp{width:auto;text-align:left;padding:1px 10px 1px 2px;color:#b9c2d6;white-space:nowrap}
 table.mx tr.gsep td{border-top:2px solid #232838}
 table.mx tr.mxtot td{border-bottom:2px solid #232838;color:#6f7890;font-variant-numeric:tabular-nums;font-weight:600}
+table.mx.sortable th{cursor:pointer;user-select:none}
+table.mx.sortable th:hover{color:#f0c24a}
+table.mx.sortable th .sort-arr{float:right;opacity:.35;font-size:.8em;margin-left:4px}
+table.mx.sortable th.sort-asc .sort-arr,
+table.mx.sortable th.sort-desc .sort-arr{opacity:1;color:#f0c24a}
 .done{background:#16241c}
 .confirmed{background:#0f1620}
 .mine{background:#4d5566}
@@ -1015,6 +1020,42 @@ def _codex_nav_js() -> str:
       if (!t) return;
       if (t.tagName === 'DETAILS') t.open = true;
       t.scrollIntoView({behavior: 'smooth'});
+    });
+  });
+
+  // ---- Sortable tables (e.g. the By-region Overview Table) ----
+  document.querySelectorAll('table.sortable thead th').forEach(function(th){
+    th.innerHTML += '<span class="sort-arr">⇅</span>';
+    th.addEventListener('click', function(){
+      var table = th.closest('table');
+      var col = Array.from(th.parentElement.children).indexOf(th);
+      // Toggle if this column is already the active sort; otherwise default
+      // to descending (biggest opportunity first) except for column 0 (the
+      // name column), which defaults to ascending (alphabetical).
+      var curDir = th.dataset.dir;
+      var asc = (curDir === 'asc' || curDir === 'desc') ? curDir !== 'asc' : col === 0;
+      table.querySelectorAll('thead th').forEach(function(h){
+        h.dataset.dir = '';
+        h.classList.remove('sort-asc', 'sort-desc');
+        var a = h.querySelector('.sort-arr');
+        if (a) a.textContent = '⇅';
+      });
+      th.dataset.dir = asc ? 'asc' : 'desc';
+      th.classList.add(asc ? 'sort-asc' : 'sort-desc');
+      var arr = th.querySelector('.sort-arr');
+      if (arr) arr.textContent = asc ? '▲' : '▼';
+      var tbody = table.querySelector('tbody');
+      var rows = Array.from(tbody.querySelectorAll('tr'));
+      rows.sort(function(a, b){
+        var ac = a.children[col], bc = b.children[col];
+        if (ac.dataset.sort !== undefined && bc.dataset.sort !== undefined) {
+          var d = parseFloat(ac.dataset.sort) - parseFloat(bc.dataset.sort);
+          return asc ? d : -d;
+        }
+        var as = ac.textContent.trim(), bs = bc.textContent.trim();
+        return asc ? as.localeCompare(bs) : bs.localeCompare(as);
+      });
+      rows.forEach(function(r){ tbody.appendChild(r); });
     });
   });
 }())"""
@@ -1628,6 +1669,7 @@ def _render(star_map, mat_map, gaps, found, regions, genus, sp_regions, sp_here,
 
     def viable_count(reg):
         n = dead = 0
+        per_star = collections.Counter()
         for sp in species:
             if sp_state(reg, sp) == "absent":
                 continue
@@ -1636,9 +1678,25 @@ def _render(star_map, mat_map, gaps, found, regions, genus, sp_regions, sp_here,
                     continue
                 if spawns(reg, star):
                     n += 1
+                    per_star[star] += 1
                 else:
                     dead += 1
-        return n, dead
+        return n, dead, per_star
+
+    def viable_mat_count(reg):
+        """Total viable material-related regional firsts for `reg` (single number,
+        no per-material breakdown — mirrors viable_count's `n` but for the
+        material axis)."""
+        n = 0
+        for sp in species_mat:
+            if sp_state(reg, sp) == "absent":
+                continue
+            for mat, col in mat_map.get(sp, {}).items():
+                if reg in found.get((sp, col), ()):
+                    continue
+                if spawns_mat(reg, mat):
+                    n += 1
+        return n
 
     reg_stats = {r: viable_count(r) for r in regions}
     P.append("<div id='region-map-wrap'>" + _build_region_map_svg(reg_stats)
@@ -1648,6 +1706,45 @@ def _render(star_map, mat_map, gaps, found, regions, genus, sp_regions, sp_here,
              "light grey otherwise.</p>")
     P.append("<script>" + _region_map_js() + "</script>")
     P.append("<div class='region-map-clear'></div>")
+
+    def rank_key(r):
+        return (0 if cover.get(r, 0) >= 400 else 1, -reg_stats[r][0])
+
+    # ---- overview table: one row per region, viable firsts by star type plus
+    # a combined materials column and a grand total — same data as the region
+    # map and the per-region matrices below, just laid out for scanning/sorting
+    # instead of hovering. Region names link to that region's own section.
+    _overview_stars = [s for s in STARS if s not in EXOTIC]
+    overview_rows = []
+    col_sums = collections.Counter()
+    mat_sum = total_sum = 0
+    for reg in sorted(regions, key=rank_key):
+        viable, _dead, per_star = reg_stats[reg]
+        mat_total = viable_mat_count(reg)
+        mat_sum += mat_total
+        total_sum += viable
+        cells = []
+        for s in _overview_stars:
+            n = per_star.get(s, 0)
+            col_sums[s] += n
+            cells.append(f"<td data-sort='{n}'>{n or ''}</td>")
+        overview_rows.append(
+            f"<tr><td class='sp'><a href='#region-{_slug(reg)}'>{esc(reg)}</a></td>"
+            + "".join(cells)
+            + f"<td data-sort='{mat_total}'>{mat_total or ''}</td>"
+            + f"<td data-sort='{viable}'><b>{viable}</b></td></tr>"
+        )
+    P.append("<details style='margin-top:1.2em'><summary>Overview Table</summary>")
+    P.append("<p class='sub'>Same numbers as the map above, broken out by star type — "
+             "click a region name to jump to its section below, click a column header to sort.</p>")
+    P.append("<div class='table-wrap'><table class='mx sortable'><thead><tr><th class='sp'>Region</th>"
+             + "".join(f"<th title='{STAR_FULL[s]}'>{STAR_LABEL[s]}</th>" for s in _overview_stars)
+             + "<th title='Combined material-related firsts'>Mat.</th><th>Total</th></tr></thead><tbody>")
+    P.append("".join(overview_rows))
+    P.append("</tbody><tfoot><tr class='mxtot'><td class='sp sub'>&Sigma;</td>"
+             + "".join(f"<td>{col_sums[s] or ''}</td>" for s in _overview_stars)
+             + f"<td>{mat_sum or ''}</td><td><b>{total_sum}</b></td></tr></tfoot>")
+    P.append("</table></div></details>")
 
     # ---- species distribution map (pick a species, see which colours are confirmed where)
     nav_entries.append(("species-map", "Species distribution map"))
@@ -1669,11 +1766,9 @@ def _render(star_map, mat_map, gaps, found, regions, genus, sp_regions, sp_here,
     P.append("<script>" + _species_map_js() + "</script>")
     P.append("<div class='region-map-clear'></div>")
 
-    def rank_key(r):
-        return (0 if cover.get(r, 0) >= 400 else 1, -reg_stats[r][0])
 
     for reg in sorted(regions, key=rank_key):
-        viable, dead = reg_stats[reg]
+        viable, dead, _ = reg_stats[reg]
         if cover.get(reg, 0) < 400 and not _shown_thin_header[0]:
             _shown_thin_header[0] = True
             P.append("<h3 style='margin-top:1.5em;color:#8892a8'>— under-sampled regions "
